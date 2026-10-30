@@ -1,18 +1,18 @@
 # Content Pipeline Agent
 
-An AI-powered content generation system that transforms a single topic into three distinct content assets: a **blog post, a LinkedIn post, and a Twitter/X thread**.
+An AI-powered multi-agent content generation system that transforms a single topic into three content assets: a **Blog Post, LinkedIn Post, and Twitter/X Thread**.
 
-The application is built using **LangGraph** for agent orchestration and **Streamlit** for the user interface. It follows a multi-agent workflow in which specialized agents collaborate to research, plan, generate, evaluate, and refine content.
+Built using **LangGraph, LangChain, Groq, Tavily, and Streamlit**, the application follows a structured multi-agent workflow to research, plan, generate, evaluate, and refine content.
 
-## Live Demo
+## 🚀 Live Demo
 
-**Try the application:** [Content Pipeline Agent – Live Demo](https://ai-content-multi-agent-jhkvvkovpmmmqr7v7lpmgh.streamlit.app/)
+**[Try Content Pipeline Agent](https://ai-content-multi-agent-jhkvvkovpmmmqr7v7lpmgh.streamlit.app/)**
 
-> **Note:** Content generation may take some time. The application uses multiple LLM-powered agents, and requests are processed through several stages. To manage token usage, reduce the likelihood of API rate-limit errors, and maintain reliable execution, the workflow incorporates pauses between certain LLM calls. Please allow some time for the complete generation process.
+**Note:** Content generation may take some time because the application executes multiple LLM-powered agents sequentially. To manage token consumption, reduce the likelihood of API rate-limit errors, and maintain reliable execution, pauses are incorporated between certain LLM calls. Please allow sufficient time for the complete workflow to finish.
 
 ## Workflow Architecture
 
-The application uses a LangGraph-based workflow to coordinate multiple specialized agents.
+The application uses LangGraph to orchestrate multiple specialized agents.
 
 ```text
 START
@@ -36,7 +36,7 @@ Critic
   |            |
   |            +----> Critic
   |
-  +---- Score acceptable / Maximum rounds reached
+  +---- Score acceptable / Maximum revisions reached
                |
                v
              Editor
@@ -55,15 +55,15 @@ Critic
 
 | Agent | Responsibility |
 |---|---|
-| Researcher | Gathers relevant information about the given topic. |
+| Researcher | Researches the given topic using relevant information sources. |
 | Planner | Develops the content structure and writing strategy. |
-| Writer | Generates the initial blog content. |
+| Writer | Generates the initial blog post. |
 | Critic | Evaluates content quality and provides feedback. |
-| Editor | Refines and polishes the approved content. |
+| Editor | Refines and polishes the generated blog content. |
 | LinkedIn Agent | Converts the content into a professional LinkedIn post. |
 | Twitter/X Agent | Generates a structured Twitter/X thread. |
 
-The critic can send the content back to the writer for revision when the quality score falls below the configured threshold, subject to the maximum revision limit.
+The critic evaluates the generated content against a configurable quality threshold. If the score is below the threshold, the content is sent back to the writer for revision, subject to the maximum revision limit.
 
 ## Technology Stack
 
@@ -73,8 +73,7 @@ The critic can send the content back to the writer for revision when the quality
 - **Groq** – LLM inference.
 - **Tavily** – Web research and information retrieval.
 - **Streamlit** – Interactive web application.
-- **Pydantic** – Data validation and structured outputs.
-- **Pytest** – Automated testing.
+- **Pydantic** – Configuration management and data validation.
 
 ## Project Structure
 
@@ -92,11 +91,8 @@ ai-content-multi-agent/
 │   ├── graph.py        # LangGraph workflow definition
 │   └── progress.py     # Execution progress tracking
 │
-├── tests/
-│   └── test_pipeline.py
-│
 ├── requirements.txt
-├── .env.example
+├── .env
 └── .gitignore
 ```
 
@@ -113,19 +109,21 @@ cd ai-content-multi-agent
 ### 2. Create a virtual environment
 
 ```bash
-python -m venv .venv
+python -m venv myvenv
 ```
 
-Activate it:
+Activate the environment:
 
 **Linux/macOS:**
+
 ```bash
-source .venv/bin/activate
+source myvenv/bin/activate
 ```
 
 **Windows:**
+
 ```bash
-.venv\Scripts\activate
+myvenv\Scripts\activate
 ```
 
 ### 3. Install dependencies
@@ -136,20 +134,34 @@ pip install -r requirements.txt
 
 ### 4. Configure environment variables
 
-Create a `.env` file using the provided example:
+Create a `.env` file in the root project directory.
 
-```bash
-cp .env.example .env
-```
-
-Configure the required API credentials:
+Add the following configuration:
 
 ```env
-GROQ_API_KEY=your_groq_api_key
+# API Credentials
 TAVILY_API_KEY=your_tavily_api_key
+GROQ_API_KEY=your_groq_api_key
+
+# Agent Models
+RESEARCHER_MODEL=openai/gpt-oss-20b
+PLANNER_MODEL=openai/gpt-oss-20b
+WRITER_MODEL=openai/gpt-oss-120b
+CRITIC_MODEL=openai/gpt-oss-120b
+EDITOR_MODEL=openai/gpt-oss-20b
+SOCIAL_MODEL=openai/gpt-oss-20b
+
+# Generation Settings
+TEMPERATURE=0.4
+
+# Quality Control
+MAX_REVISIONS=3
+QUALITY_THRESHOLD=8.0
 ```
 
-The Tavily API key is optional if web research is not required by your configuration.
+Replace the API key placeholders with your own credentials.
+
+**Security:** Never commit your `.env` file or publish API keys on GitHub. Add `.env` and `myvenv/` to `.gitignore`.
 
 ### 5. Run the application
 
@@ -163,21 +175,29 @@ Open the application in your browser:
 http://localhost:8501
 ```
 
-## Running Tests
+## Configuration Overview
 
-Execute the test suite using:
+The application uses environment variables to configure the individual agents and content generation workflow.
 
-```bash
-pytest -q
-```
+| Variable | Description |
+|---|---|
+| `RESEARCHER_MODEL` | Model used by the researcher agent. |
+| `PLANNER_MODEL` | Model used by the planner agent. |
+| `WRITER_MODEL` | Model used by the writer agent. |
+| `CRITIC_MODEL` | Model used by the critic agent. |
+| `EDITOR_MODEL` | Model used by the editor agent. |
+| `SOCIAL_MODEL` | Model used for social media content generation. |
+| `TEMPERATURE` | Controls LLM generation variability. |
+| `MAX_REVISIONS` | Maximum number of writer revision attempts. |
+| `QUALITY_THRESHOLD` | Minimum quality score required to pass the critic evaluation. |
 
-## Output and Data Handling
+## Generated Outputs
 
-The application generates three content assets:
+For each input topic, the application generates:
 
-1. **Blog Post** – Structured, informative, and detailed long-form content.
-2. **LinkedIn Post** – Professional content formatted for LinkedIn.
-3. **Twitter/X Thread** – A sequence of concise, connected posts.
+1. **Blog Post:** Detailed, structured, long-form content.
+2. **LinkedIn Post:** Professional content optimized for LinkedIn.
+3. **Twitter/X Thread:** A sequence of concise, connected posts.
 
 Generated results are maintained within the browser session. Users can download the generated content using the available download options.
 
