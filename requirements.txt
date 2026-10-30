@@ -6,3 +6,4 @@ langchain-openai>=0.2
 tavily-python>=0.5
 streamlit>=1.38
 pytest>=8.0
+groq
