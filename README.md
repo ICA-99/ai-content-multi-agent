@@ -1,54 +1,188 @@
-# Content Pipeline Agent (simple version)
+# Content Pipeline Agent
 
-One topic in, three assets out: a blog post, a LinkedIn post and a Twitter/X thread.
-Built with LangGraph and Streamlit. No database, no API server.
+An AI-powered content generation system that transforms a single topic into three distinct content assets: a **blog post, a LinkedIn post, and a Twitter/X thread**.
 
-## Graph
+The application is built using **LangGraph** for agent orchestration and **Streamlit** for the user interface. It follows a multi-agent workflow in which specialized agents collaborate to research, plan, generate, evaluate, and refine content.
 
+## Live Demo
+
+**Try the application:** [Content Pipeline Agent – Live Demo](https://ai-content-multi-agent-jhkvvkovpmmmqr7v7lpmgh.streamlit.app/)
+
+> **Note:** Content generation may take some time. The application uses multiple LLM-powered agents, and requests are processed through several stages. To manage token usage, reduce the likelihood of API rate-limit errors, and maintain reliable execution, the workflow incorporates pauses between certain LLM calls. Please allow some time for the complete generation process.
+
+## Workflow Architecture
+
+The application uses a LangGraph-based workflow to coordinate multiple specialized agents.
+
+```text
+START
+  |
+  v
+Researcher
+  |
+  v
+Planner
+  |
+  v
+Writer
+  |
+  v
+Critic
+  |
+  +---- Score below threshold
+  |            |
+  |            v
+  |          Writer (Revision)
+  |            |
+  |            +----> Critic
+  |
+  +---- Score acceptable / Maximum rounds reached
+               |
+               v
+             Editor
+               |
+        +------+------+
+        |             |
+        v             v
+     LinkedIn       Twitter/X
+        |             |
+        +------+------+
+               |
+              END
 ```
-START -> researcher -> planner -> writer -> critic --(score < threshold and rounds left)--> writer
-                                               |
-                                               +--(good enough or max rounds)--> editor --+--> linkedin --> END
-                                                                                          +--> twitter  --> END
+
+### Agent Responsibilities
+
+| Agent | Responsibility |
+|---|---|
+| Researcher | Gathers relevant information about the given topic. |
+| Planner | Develops the content structure and writing strategy. |
+| Writer | Generates the initial blog content. |
+| Critic | Evaluates content quality and provides feedback. |
+| Editor | Refines and polishes the approved content. |
+| LinkedIn Agent | Converts the content into a professional LinkedIn post. |
+| Twitter/X Agent | Generates a structured Twitter/X thread. |
+
+The critic can send the content back to the writer for revision when the quality score falls below the configured threshold, subject to the maximum revision limit.
+
+## Technology Stack
+
+- **Python** – Core application development.
+- **LangGraph** – Multi-agent workflow orchestration.
+- **LangChain** – LLM integration and agent components.
+- **Groq** – LLM inference.
+- **Tavily** – Web research and information retrieval.
+- **Streamlit** – Interactive web application.
+- **Pydantic** – Data validation and structured outputs.
+- **Pytest** – Automated testing.
+
+## Project Structure
+
+```text
+ai-content-multi-agent/
+│
+├── streamlit_app.py
+│
+├── app/
+│   ├── config.py       # Application configuration
+│   ├── llm.py          # LLM integration and invocation
+│   ├── state.py        # Shared graph state
+│   ├── prompts.py      # Agent prompts
+│   ├── nodes.py        # Agent implementations and routing
+│   ├── graph.py        # LangGraph workflow definition
+│   └── progress.py     # Execution progress tracking
+│
+├── tests/
+│   └── test_pipeline.py
+│
+├── requirements.txt
+├── .env.example
+└── .gitignore
 ```
 
-## Project layout
+## Installation and Setup
 
-```
-streamlit_app.py     UI: takes input, runs the graph, shows live progress and results
-app/
-  config.py          settings from .env
-  llm.py             OpenAI chat model
-  state.py           shared graph state
-  prompts.py         all prompts
-  nodes.py           the agents (nodes) and the critic router
-  graph.py           builds the LangGraph graph
-  progress.py        turns node updates into readable progress messages
-tests/test_pipeline.py
-```
-
-## Run
+### 1. Clone the repository
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
+git clone https://github.com/YOUR_USERNAME/ai-content-multi-agent.git
+
+cd ai-content-multi-agent
+```
+
+### 2. Create a virtual environment
+
+```bash
+python -m venv .venv
+```
+
+Activate it:
+
+**Linux/macOS:**
+```bash
+source .venv/bin/activate
+```
+
+**Windows:**
+```bash
+.venv\Scripts\activate
+```
+
+### 3. Install dependencies
+
+```bash
 pip install -r requirements.txt
-cp .env.example .env        # add OPENAI_API_KEY (TAVILY_API_KEY optional)
+```
+
+### 4. Configure environment variables
+
+Create a `.env` file using the provided example:
+
+```bash
+cp .env.example .env
+```
+
+Configure the required API credentials:
+
+```env
+GROQ_API_KEY=your_groq_api_key
+TAVILY_API_KEY=your_tavily_api_key
+```
+
+The Tavily API key is optional if web research is not required by your configuration.
+
+### 5. Run the application
+
+```bash
 streamlit run streamlit_app.py
 ```
 
-Open http://localhost:8501
+Open the application in your browser:
 
-## Docker
-
-```bash
-docker build -t content-agent .
-docker run --env-file .env -p 8501:8501 content-agent
+```text
+http://localhost:8501
 ```
 
-## Test
+## Running Tests
+
+Execute the test suite using:
 
 ```bash
 pytest -q
 ```
 
-Results live in the browser session only. Use the download buttons to keep them.
+## Output and Data Handling
+
+The application generates three content assets:
+
+1. **Blog Post** – Structured, informative, and detailed long-form content.
+2. **LinkedIn Post** – Professional content formatted for LinkedIn.
+3. **Twitter/X Thread** – A sequence of concise, connected posts.
+
+Generated results are maintained within the browser session. Users can download the generated content using the available download options.
+
+## Author
+
+**Anjna Pal**
+
+Email: [apaul80011@gmail.com](mailto:apaul80011@gmail.com)
